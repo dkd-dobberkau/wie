@@ -460,6 +460,51 @@
             background: #ffc107;
             color: #856404;
         }
+
+        /* Disclaimer Footer */
+        .disclaimer-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 0.8em;
+            text-align: center;
+            border-top: 2px solid #ff6b6b;
+            z-index: 1000;
+        }
+
+        .disclaimer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .disclaimer-footer p {
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .disclaimer-footer strong {
+            color: #ff6b6b;
+        }
+
+        /* Adjust body padding to account for footer */
+        body {
+            padding-bottom: 60px;
+        }
+
+        /* Hide footer on small screens to save space */
+        @media (max-width: 768px) {
+            .disclaimer-footer {
+                display: none;
+            }
+            
+            body {
+                padding-bottom: 0;
+            }
+        }
     </style>
 </head>
 <body>

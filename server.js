@@ -15,7 +15,7 @@ const io = socketIo(server, {
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Root route - serve index.html
+// Serve index.html for root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

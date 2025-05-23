@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wer ist es? - Multiplayer</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .game-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Main Menu */
+        .main-menu {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .main-menu h2 {
+            color: #495057;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Waiting Room */
+        .waiting-room {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .room-code {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 20px 0;
+            letter-spacing: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .waiting-info {
+            color: #6c757d;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Game Area */
+        .game-area {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .game-status {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .status-waiting { background: #ffc107; color: #856404; }
+        .status-ready { background: #17a2b8; color: white; }
+        .status-playing { background: #28a745; color: white; }
+        .status-finished { background: #6f42c1; color: white; }
+
+        .characters-section {
+            margin-bottom: 20px;
+        }
+
+        .characters-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .character-card {
+            background: white;
+            border: 3px solid #dee2e6;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: scale(1.05);
+            border-color: #4ecdc4;
+        }
+
+        .character-card.selected {
+            border-color: #ff6b6b;
+            background: #fff5f5;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .character-card.eliminated {
+            opacity: 0.3;
+            transform: scale(0.9);
+            filter: grayscale(100%);
+            cursor: not-allowed;
+        }
+
+        .character-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        }
+
+        .character-name {
+            font-size: 1em;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .character-traits {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        /* Question Section */
+        .question-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            resize: none;
+        }
+
+        .question-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-answer {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn-yes {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-no {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-guess {
+            background: linear-gradient(45deg, #ffc107, #ffdb4d);
+            color: #856404;
+        }
+
+        .btn-answer:hover, .btn-guess:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Question Display */
+        .question-display {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .question-from {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Game Log */
+        .game-log {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .game-log h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #4ecdc4;
+            font-size: 0.9em;
+        }
+
+        /* Winner Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .winner-emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .winner-text {
+            font-size: 1.5em;
+            color: #495057;
+            margin-bottom: 20px;
+        }
+
+        /* Error Messages */
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .game-header h1 {
+                font-size: 2em;
+            }
+            
+            .characters-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .room-code {
+                font-size: 2em;
+                letter-spacing: 4px;
+            }
+
+            .question-buttons {
+                flex-direction: column;
+            }
+
+            .game-status {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6b6b;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+
+        .connection-connected {
+            background: #28a745;
+            color: white;
+        }
+
+        .connection-disconnected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .connection-connecting {
+            background: #ffc107;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status hidden" id="connectionStatus">Verbinden...</div>
+    
+    <div class="container">
+        <div class="game-header">
+            <h1>🤔 Wer ist es? 🎯</h1>
+            <p>Multiplayer Ratespiel - Erratet die Person eures Gegners!</p>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="mainMenu" class="main-menu">
+            <h2>Willkommen!</h2>
+            <div class="menu-buttons">
+                <button class="btn btn-primary" onclick="showCreateRoom()">
+                    🏠 Neuen Raum erstellen
+                </button>
+                <button class="btn btn-secondary" onclick="showJoinRoom()">
+                    🚪 Raum beitreten
+                </button>
+            </div>
+        </div>
+
+        <!-- Create Room -->
+        <div id="createRoomMenu" class="main-menu hidden">
+            <h2>Raum erstellen</h2>
+            <input type="text" id="createPlayerName" placeholder="Dein Name" class="question-input" maxlength="20">
+            <div class="menu-buttons">
+                <button class="btn btn-primary" onclick="createRoom()">
+                    🎮 Raum erstellen
+                </button>
+                <button class="btn btn-secondary" onclick="showMainMenu()">
+                    ← Zurück
+                </button>
+            </div>
+        </div>
+
+        <!-- Join Room -->
+        <div id="joinRoomMenu" class="main-menu hidden">
+            <h2>Raum beitreten</h2>
+            <input type="text" id="joinRoomCode" placeholder="Raum-Code (z.B. ABC123)" class="question-input" maxlength="6" style="text-transform: uppercase;">
+            <input type="text" id="joinPlayerName" placeholder="Dein Name" class="question-input" maxlength="20">
+            <div class="menu-buttons">
+                <button class="btn btn-primary" onclick="joinRoom()">
+                    🚀 Beitreten
+                </button>
+                <button class="btn btn-secondary" onclick="showMainMenu()">
+                    ← Zurück
+                </button>
+            </div>
+        </div>
+
+        <!-- Waiting Room -->
+        <div id="waitingRoom" class="waiting-room hidden">
+            <h2>Warten auf Mitspieler...</h2>
+            <div class="room-code" id="roomCodeDisplay">ABC123</div>
+            <div class="waiting-info">
+                Teile diesen Code mit deinem Mitspieler!
+            </div>
+            <div class="spinner"></div>
+            <button class="btn btn-secondary" onclick="showMainMenu()">
+                🏠 Hauptmenü
+            </button>
+        </div>
+
+        <!-- Game Ready -->
+        <div id="gameReady" class="waiting-room hidden">
+            <h2>🎉 Bereit zum Spielen!</h2>
+            <div class="success-message">
+                Beide Spieler sind verbunden. Das Spiel kann beginnen!
+            </div>
+            <div class="menu-buttons">
+                <button class="btn btn-primary" onclick="startGame()">
+                    🎯 Spiel starten
+                </button>
+                <button class="btn btn-secondary" onclick="showMainMenu()">
+                    🏠 Hauptmenü
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div id="gameArea" class="game-area hidden">
+            <!-- Game Status -->
+            <div class="game-status">
+                <div class="player-info">
+                    <span id="gameStatusText">Wähle deinen Charakter</span>
+                    <span class="status-badge" id="statusBadge">Auswahl</span>
+                </div>
+                <div class="player-info">
+                    <span id="playerTurnText"></span>
+                    <button class="btn btn-secondary" onclick="showMainMenu()">🏠 Hauptmenü</button>
+                </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="messageArea"></div>
+
+            <!-- Character Selection -->
+            <div class="characters-section">
+                <div class="characters-title">Wähle einen Charakter (geheim):</div>
+                <div class="characters-grid" id="charactersGrid">
+                    <!-- Characters will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Question Section -->
+            <div id="questionSection" class="question-section hidden">
+                <h4>Stelle eine Frage:</h4>
+                <textarea class="question-input" id="questionInput" placeholder="z.B. Hat deine Person blonde Haare?" rows="2"></textarea>
+                <div class="question-buttons">
+                    <button class="btn btn-primary" onclick="askQuestion()">
+                        ❓ Frage stellen
+                    </button>
+                    <button class="btn btn-guess" onclick="makeGuess()">
+                        🎯 Person erraten
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question to Answer -->
+            <div id="answerSection" class="question-section hidden">
+                <div class="question-display">
+                    <div class="question-text" id="questionToAnswer"></div>
+                    <div class="question-from" id="questionFrom"></div>
+                </div>
+                <div class="question-buttons">
+                    <button class="btn btn-answer btn-yes" onclick="answerQuestion(true)">
+                        ✅ Ja
+                    </button>
+                    <button class="btn btn-answer btn-no" onclick="answerQuestion(false)">
+                        ❌ Nein
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Log -->
+            <div class="game-log">
+                <h4>📜 Spielverlauf</h4>
+                <div id="gameLogEntries">
+                    <!-- Log entries will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Modal -->
+    <div id="winnerModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="winner-emoji">🏆</div>
+            <div class="winner-text" id="winnerText">Gewonnen!</div>
+            <div class="menu-buttons">
+                <button class="btn btn-primary" onclick="playAgain()">
+                    🔄 Nochmal spielen
+                </button>
+                <button class="btn btn-secondary" onclick="showMainMenu()">
+                    🏠 Hauptmenü
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.io connection
+        const socket = io();
+        
+        // Game state
+        let gameState = {
+            roomId: null,
+            playerNumber: null,
+            playerName: null,
+            characters: [],
+            selectedCharacter: null,
+            currentQuestion: null,
+            gameData: null
+        };
+
+        // Connection status
+        socket.on('connect', () => {
+            console.log('🔗 Mit Server verbunden');
+            updateConnectionStatus('connected');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('❌ Verbindung verloren');
+            updateConnectionStatus('disconnected');
+        });
+
+        socket.on('reconnect', () => {
+            console.log('🔄 Wieder verbunden');
+            updateConnectionStatus('connected');
+        });
+
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.classList.remove('hidden', 'connection-connected', 'connection-disconnected', 'connection-connecting');
+            
+            switch(status) {
+                case 'connected':
+                    statusEl.textContent = '🟢 Verbunden';
+                    statusEl.classList.add('connection-connected');
+                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                    break;
+                case 'disconnected':
+                    statusEl.textContent = '🔴 Verbindung verloren';
+                    statusEl.classList.add('connection-disconnected');
+                    break;
+                case 'connecting':
+                    statusEl.textContent = '🟡 Verbinden...';
+                    statusEl.classList.add('connection-connecting');
+                    break;
+            }
+        }
+
+        // Socket event listeners
+        socket.on('roomCreated', (data) => {
+            gameState.roomId = data.roomId;
+            gameState.playerNumber = data.playerNumber;
+            showWaitingRoom(data.roomId);
+        });
+
+        socket.on('gameReady', (data) => {
+            showGameReady();
+        });
+
+        socket.on('gameStarted', (data) => {
+            gameState.characters = data.characters;
+            gameState.gameData = data.gameState;
+            gameState.playerNumber = data.playerNumber;
+            showGameArea();
+            populateCharacters();
+            updateGameStatus('Wähle deinen Charakter (geheim)', 'selecting');
+        });
+
+        socket.on('gameUpdate', (data) => {
+            gameState.gameData = data.gameState;
+            updateGameDisplay();
+        });
+
+        socket.on('questionReceived', (data) => {
+            showAnswerSection(data.question, data.from);
+        });
+
+        socket.on('questionAnswered', (data) => {
+            hideAnswerSection();
+            addLogEntry(`${data.from}: "${data.answer}"`);
+            updatePlayerTurn(data.nextPlayer);
+        });
+
+        socket.on('gameFinished', (data) => {
+            showWinner(data.winnerName, data.correctCharacter);
+        });
+
+        socket.on('playerDisconnected', (data) => {
+            showMessage(`${data.playerName} hat das Spiel verlassen`, 'error');
+        });
+
+        socket.on('gameReset', (data) => {
+            gameState.gameData = data.gameState;
+            gameState.selectedCharacter = null;
+            resetGameDisplay();
+        });
+
+        socket.on('error', (message) => {
+            showMessage(message, 'error');
+        });
+
+        // UI Functions
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('mainMenu').classList.remove('hidden');
+        }
+
+        function showCreateRoom() {
+            hideAllScreens();
+            document.getElementById('createRoomMenu').classList.remove('hidden');
+            document.getElementById('createPlayerName').focus();
+        }
+
+        function showJoinRoom() {
+            hideAllScreens();
+            document.getElementById('joinRoomMenu').classList.remove('hidden');
+            document.getElementById('joinRoomCode').focus();
+        }
+
+        function showWaitingRoom(roomId) {
+            hideAllScreens();
+            document.getElementById('waitingRoom').classList.remove('hidden');
+            document.getElementById('roomCodeDisplay').textContent = roomId;
+        }
+
+        function showGameReady() {
+            hideAllScreens();
+            document.getElementById('gameReady').classList.remove('hidden');
+        }
+
+        function showGameArea() {
+            hideAllScreens();
+            document.getElementById('gameArea').classList.remove('hidden');
+        }
+
+        function hideAllScreens() {
+            const screens = ['mainMenu', 'createRoomMenu', 'joinRoomMenu', 'waitingRoom', 'gameReady', 'gameArea'];
+            screens.forEach(screen => {
+                document.getElementById(screen).classList.add('hidden');
+            });
+        }
+
+        // Game Functions
+        function createRoom() {
+            const playerName = document.getElementById('createPlayerName').value.trim();
+            if (!playerName) {
+                showMessage('Bitte gib deinen Namen ein!', 'error');
+                return;
+            }
+            
+            gameState.playerName = playerName;
+            socket.emit('createRoom', playerName);
+        }
+
+        function joinRoom() {
+            const roomCode = document.getElementById('joinRoomCode').value.trim().toUpperCase();
+            const playerName = document.getElementById('joinPlayerName').value.trim();
+            
+            if (!roomCode || !playerName) {
+                showMessage('Bitte fülle alle Felder aus!', 'error');
+                return;
+            }
+            
+            if (roomCode.length !== 6) {
+                showMessage('Der Raum-Code muss 6 Zeichen lang sein!', 'error');
+                return;
+            }
+            
+            gameState.playerName = playerName;
+            socket.emit('joinRoom', { roomId: roomCode, playerName });
+        }
+
+        function startGame() {
+            socket.emit('startGame');
+        }
+
+        function populateCharacters() {
+            const grid = document.getElementById('charactersGrid');
+            grid.innerHTML = '';
+            
+            gameState.characters.forEach((character, index) => {
+                const card = createCharacterCard(character, index);
+                grid.appendChild(card);
+            });
+        }
+
+        function createCharacterCard(character, index) {
+            const card = document.createElement('div');
+            card.className = 'character-card';
+            card.dataset.index = index;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'character-avatar';
+            avatar.textContent = character.name.charAt(0);
+            
+            const name = document.createElement('div');
+            name.className = 'character-name';
+            name.textContent = character.name;
+            
+            const traits = document.createElement('div');
+            traits.className = 'character-traits';
+            traits.textContent = `${character.hair}, ${character.eyes}`;
+            if (character.glasses) traits.textContent += ', Brille';
+            if (character.hat) traits.textContent += ', Hut';
+            if (character.beard) traits.textContent += ', Bart';
+            
+            card.appendChild(avatar);
+            card.appendChild(name);
+            card.appendChild(traits);
+            
+            card.addEventListener('click', () => selectCharacter(index));
+            
+            return card;
+        }
+
+        function selectCharacter(index) {
+            if (!gameState.gameData || gameState.gameData.status === 'playing') {
+                // Im Spiel: Charakter eliminieren
+                eliminateCharacter(index);
+                return;
+            }
+            
+            if (gameState.gameData.status === 'selecting' && !gameState.selectedCharacter) {
+                // Charakter-Auswahl
+                gameState.selectedCharacter = index;
+                
+                // Visual feedback
+                document.querySelectorAll('.character-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+                
+                socket.emit('selectCharacter', { characterIndex: index });
+                showMessage(`Du hast ${gameState.characters[index].name} gewählt!`, 'success');
+            }
+        }
+
+        function eliminateCharacter(index) {
+            const card = document.querySelector(`[data-index="${index}"]`);
+            if (card.classList.contains('eliminated')) {
+                // Un-eliminate
+                card.classList.remove('eliminated');
+            } else {
+                // Eliminate
+                card.classList.add('eliminated');
+                socket.emit('eliminateCharacter', { characterIndex: index });
+            }
+        }
+
+        function askQuestion() {
+            const question = document.getElementById('questionInput').value.trim();
+            if (!question) {
+                showMessage('Bitte stelle eine Frage!', 'error');
+                return;
+            }
+            
+            socket.emit('askQuestion', { question });
+            document.getElementById('questionInput').value = '';
+            document.getElementById('questionSection').classList.add('hidden');
+            
+            addLogEntry(`Du: "${question}"`);
+            showMessage('Frage gestellt! Warte auf Antwort...', 'success');
+        }
+
+        function showAnswerSection(question, from) {
+            gameState.currentQuestion = { question, from };
+            document.getElementById('questionToAnswer').textContent = question;
+            document.getElementById('questionFrom').textContent = `Frage von: ${from}`;
+            document.getElementById('answerSection').classList.remove('hidden');
+            document.getElementById('questionSection').classList.add('hidden');
+        }
+
+        function answerQuestion(answer) {
+            if (!gameState.currentQuestion) return;
+            
+            socket.emit('answerQuestion', { 
+                answer, 
+                questionFrom: gameState.currentQuestion.from 
+            });
+            
+            hideAnswerSection();
+            const answerText = answer ? 'Ja' : 'Nein';
+            showMessage(`Du hast "${answerText}" geantwortet`, 'success');
+        }
+
+        function hideAnswerSection() {
+            document.getElementById('answerSection').classList.add('hidden');
+            gameState.currentQuestion = null;
+        }
+
+        function makeGuess() {
+            const availableCharacters = gameState.characters.filter((char, index) => {
+                const card = document.querySelector(`[data-index="${index}"]`);
+                return !card.classList.contains('eliminated');
+            });
+            
+            if (availableCharacters.length === 0) {
+                showMessage('Keine Charaktere mehr verfügbar!', 'error');
+                return;
+            }
+            
+            // Create selection modal
+            let options = 'Wähle einen Charakter:\n\n';
+            availableCharacters.forEach((char, i) => {
+                options += `${i + 1}. ${char.name}\n`;
+            });
+            
+            const choice = prompt(options + '\nGib die Nummer ein:');
+            if (!choice) return;
+            
+            const choiceIndex = parseInt(choice) - 1;
+            if (choiceIndex < 0 || choiceIndex >= availableCharacters.length) {
+                showMessage('Ungültige Auswahl!', 'error');
+                return;
+            }
+            
+            const selectedChar = availableCharacters[choiceIndex];
+            const characterIndex = gameState.characters.indexOf(selectedChar);
+            
+            socket.emit('makeGuess', { characterIndex });
+        }
+
+        function updateGameDisplay() {
+            if (!gameState.gameData) return;
+            
+            // Update eliminated characters
+            if (gameState.gameData.eliminated) {
+                gameState.gameData.eliminated.forEach(index => {
+                    const card = document.querySelector(`[data-index="${index}"]`);
+                    if (card) card.classList.add('eliminated');
+                });
+            }
+            
+            // Update game log
+            if (gameState.gameData.gameLog) {
+                updateGameLog(gameState.gameData.gameLog);
+            }
+            
+            // Update status
+            switch(gameState.gameData.status) {
+                case 'selecting':
+                    updateGameStatus('Wähle deinen Charakter', 'selecting');
+                    break;
+                case 'playing':
+                    updateGameStatus('Spiel läuft', 'playing');
+                    updatePlayerTurn(gameState.gameData.currentPlayer);
+                    break;
+            }
+        }
+
+        function updateGameStatus(text, status) {
+            document.getElementById('gameStatusText').textContent = text;
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge status-' + status;
+            badge.textContent = getStatusText(status);
+        }
+
+        function updatePlayerTurn(currentPlayer) {
+            const turnText = document.getElementById('playerTurnText');
+            if (currentPlayer === gameState.playerNumber) {
+                turnText.textContent = '🎯 Du bist dran!';
+                document.getElementById('questionSection').classList.remove('hidden');
+            } else {
+                turnText.textContent = '⏳ Gegner ist dran';
+                document.getElementById('questionSection').classList.add('hidden');
+            }
+        }
+
+        function getStatusText(status) {
+            const statusTexts = {
+                'waiting': 'Warten',
+                'ready': 'Bereit',
+                'selecting': 'Auswahl',
+                'playing': 'Spielend',
+                'finished': 'Beendet'
+            };
+            return statusTexts[status] || status;
+        }
+
+        function updateGameLog(logEntries) {
+            const container = document.getElementById('gameLogEntries');
+            container.innerHTML = '';
+            
+            logEntries.forEach(entry => {
+                const logEl = document.createElement('div');
+                logEl.className = 'log-entry';
+                logEl.textContent = entry;
+                container.appendChild(logEl);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addLogEntry(message) {
+            const container = document.getElementById('gameLogEntries');
+            const logEl = document.createElement('div');
+            logEl.className = 'log-entry';
+            logEl.textContent = message;
+            container.appendChild(logEl);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showWinner(winnerName, correctCharacter) {
+            const isWinner = winnerName === gameState.playerName;
+            const text = isWinner ? 
+                `🎉 Du hast gewonnen! Die gesuchte Person war: ${correctCharacter.name}` :
+                `😔 ${winnerName} hat gewonnen! Die gesuchte Person war: ${correctCharacter.name}`;
+            
+            document.getElementById('winnerText').textContent = text;
+            document.getElementById('winnerModal').classList.remove('hidden');
+        }
+
+        function playAgain() {
+            document.getElementById('winnerModal').classList.add('hidden');
+            socket.emit('newGame');
+        }
+
+        function resetGameDisplay() {
+            // Reset character cards
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected', 'eliminated');
+            });
+            
+            // Reset UI
+            document.getElementById('questionSection').classList.add('hidden');
+            document.getElementById('answerSection').classList.add('hidden');
+            updateGameStatus('Wähle deinen Charakter', 'selecting');
+            document.getElementById('playerTurnText').textContent = '';
+        }
+
+        function showMessage(message, type = 'info') {
+            const messageArea = document.getElementById('messageArea');
+            const messageEl = document.createElement('div');
+            messageEl.className = type === 'error' ? 'error-message' : 'success-message';
+            messageEl.textContent = message;
+            
+            messageArea.appendChild(messageEl);
+            
+            setTimeout(() => {
+                messageEl.remove();
+            }, 5000);
+        }
+
+        // Auto-uppercase room code input
+        document.getElementById('joinRoomCode').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+
+        // Enter key handlers
+        document.getElementById('createPlayerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') createRoom();
+        });
+
+        document.getElementById('joinPlayerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') joinRoom();
+        });
+
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                askQuestion();
+            }
+        });
+
+        // Initialize
+        showMainMenu();
+        updateConnectionStatus('connecting');
+    </script>
+</body>
+</html>

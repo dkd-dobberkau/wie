@@ -15,6 +15,11 @@ const io = socketIo(server, {
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Root route - serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Character data
 const characters = [
   {name: "Anna", hair: "blond", eyes: "blau", glasses: false, hat: false, beard: false, gender: "w", age: "jung"},

@@ -1,91 +1,179 @@
-# 🤔 Wer ist es? - Multiplayer
+# 🎓 Wer ist es? - Multiplayer Lernprojekt
 
-Ein browserbasiertes Multiplayer-Ratespiel, das auf dem klassischen "Wer ist es?" (Guess Who?) Spiel basiert. Spieler erstellen oder treten Spielräumen bei und versuchen, den vom Gegner gewählten Charakter durch Ja/Nein-Fragen zu erraten.
+> **Wichtiger Hinweis:** Dies ist ein **Bildungsprojekt** und dient ausschließlich dem Lernen und der Demonstration von Web-Technologien. Es ist **nicht für kommerzielle Nutzung** bestimmt.
 
-## 🎮 Spielprinzip
+## 📚 Über dieses Projekt
 
-1. **Raum erstellen oder beitreten**: Ein Spieler erstellt einen Raum mit einem 6-stelligen Code, der andere tritt bei
-2. **Charakter wählen**: Beide Spieler wählen geheim einen der 16 verfügbaren Charaktere
-3. **Fragen stellen**: Abwechselnd werden Ja/Nein-Fragen über den gegnerischen Charakter gestellt
-4. **Eliminieren**: Basierend auf den Antworten werden Charaktere ausgeschlossen
-5. **Erraten**: Wer zuerst den richtigen Charakter errät, gewinnt!
+Dieses Projekt wurde entwickelt, um moderne Web-Entwicklungstechniken zu demonstrieren und zu erlernen:
 
-## 🚀 Installation & Start
+- **Zweck:** Bildung und Demonstration von Technologien
+- **Status:** Lernprojekt / Educational Demo
+- **Lizenz:** Nicht-kommerziell
+- **Zielgruppe:** Studierende, Entwickler, Lernende
 
-### Voraussetzungen
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+## ⚖️ Rechtliche Hinweise
 
-### Lokale Installation
+### Nicht-kommerzielle Nutzung
+- ✅ **Erlaubt:** Lernen, Studieren, Experimentieren
+- ✅ **Erlaubt:** Persönlicher Gebrauch und Bildung
+- ✅ **Erlaubt:** Code-Analyse und Weiterentwicklung zu Lernzwecken
+- ❌ **Nicht erlaubt:** Kommerzielle Nutzung oder Verkauf
+- ❌ **Nicht erlaubt:** Markenrechtsverletzungen
+
+### Urheberrecht
+Das klassische "Wer ist es?" / "Guess Who?" Spiel ist ein eingetragenes Markenzeichen und Eigentum der jeweiligen Rechteinhaber (Hasbro, MB Games, etc.). Diese Implementierung:
+
+- Ist eine **eigenständige technische Umsetzung** zu Bildungszwecken
+- Verwendet **keine urheberrechtlich geschützten Grafiken** oder Assets
+- Implementiert nur die **grundlegende Spielmechanik** als Lernbeispiel
+- Respektiert die Rechte der ursprünglichen Entwickler
+
+## 🛠️ Technologie-Demo
+
+Dieses Projekt demonstriert folgende Technologien:
+
+### Backend
+- **Node.js** - Server-seitige JavaScript-Laufzeit
+- **Express.js** - Web-Framework für Node.js
+- **Socket.io** - Real-time bidirectionale Kommunikation
+- **Railway** - Cloud-Deployment-Plattform
+
+### Frontend
+- **HTML5** - Moderne Web-Standards
+- **CSS3** - Responsive Design und Animationen
+- **Vanilla JavaScript** - Client-seitige Interaktivität
+- **WebSockets** - Real-time Multiplayer-Funktionalität
+
+### Features
+- ✨ Real-time Multiplayer (bis zu 2 Spieler)
+- 🏠 Private Spielräume mit Zugangscodes
+- 📱 Mobile-responsive Design
+- 🔄 Automatische Wiederverbindung
+- 📊 Live-Spielstatistiken
+- 🎯 Vollständige Spiellogik-Implementierung
+
+## 🎯 Lernziele
+
+Dieses Projekt eignet sich zum Erlernen von:
+
+1. **Real-time Web-Anwendungen** mit WebSockets
+2. **Multiplayer-Spielarchitektur** und State Management
+3. **Responsive Webdesign** für verschiedene Gerätetypen
+4. **Cloud-Deployment** mit modernen Plattformen
+5. **Full-Stack JavaScript-Entwicklung**
+
+## 🚀 Installation & Setup
+
 ```bash
 # Repository klonen
-git clone https://github.com/yourusername/wer-ist-es-multiplayer.git
+git clone https://github.com/dein-username/wer-ist-es-multiplayer.git
 cd wer-ist-es-multiplayer
 
-# Abhängigkeiten installieren
+# Dependencies installieren
 npm install
 
 # Entwicklungsserver starten
 npm run dev
 
-# Oder Produktionsserver starten
+# Production-Server starten
 npm start
 ```
 
-Der Server läuft standardmäßig auf `http://localhost:3000`
+## 📁 Projektstruktur
 
-## 🎯 Features
-
-- **Echtzeit-Multiplayer** mit Socket.io
-- **Responsive Design** für Desktop und Mobile
-- **Automatische Raumverwaltung** mit Timeout-basierter Bereinigung
-- **Verbindungsstatus-Anzeige** für bessere User Experience
-- **Spielverlauf-Log** zur Nachverfolgung aller Aktionen
-- **Character-Elimination** durch Klick-Interface
-
-## 🏗️ Technologie-Stack
-
-- **Backend**: Node.js, Express, Socket.io
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **Echtzeit-Kommunikation**: WebSockets
-- **Styling**: Custom CSS mit Gradient-Design
-
-## 📊 API Endpoints
-
-- `GET /health` - Server-Gesundheitsstatus
-- `GET /stats` - Spielstatistiken (Räume, Spieler, Uptime)
-
-## 🎨 Charaktere
-
-Das Spiel enthält 16 vordefinierte Charaktere mit folgenden Eigenschaften:
-- Name, Haarfarbe, Augenfarbe
-- Brille (ja/nein), Hut (ja/nein), Bart (ja/nein)
-- Geschlecht, Alter
+```
+wer-ist-es-multiplayer/
+├── package.json          # Dependencies und Scripts
+├── server.js            # Express + Socket.io Server
+├── public/
+│   └── index.html       # Frontend (HTML + CSS + JS)
+├── README.md           # Diese Datei
+└── .gitignore         # Git-Ausschlüsse
+```
 
 ## 🔧 Konfiguration
 
-Umgebungsvariablen:
-- `PORT` - Server-Port (Standard: 3000)
+### Environment Variables
 
-## 📱 Deployment
+```bash
+NODE_ENV=production     # Produktionsumgebung
+PORT=3000              # Server-Port (automatisch von Railway gesetzt)
+```
 
-Das Projekt ist für Railway-Deployment optimiert:
-- Automatische Port-Erkennung über `process.env.PORT`
-- CORS für alle Origins aktiviert
-- Speicher-effiziente In-Memory-Verwaltung
+### Railway Deployment
+1. GitHub Repository erstellen
+2. Mit Railway.app verbinden
+3. Automatisches Deployment bei Git Push
 
-## 🤝 Beitragen
+## 📊 Live-Demo
 
-1. Fork das Repository
-2. Erstelle einen Feature-Branch (`git checkout -b feature/AmazingFeature`)
-3. Committe deine Änderungen (`git commit -m 'Add some AmazingFeature'`)
-4. Push zum Branch (`git push origin feature/AmazingFeature`)
-5. Öffne einen Pull Request
+**Wichtig:** Die Live-Demo dient ausschließlich Demonstrationszwecken:
+
+- 🌐 **URL:** [Ihre Railway-URL]
+- 🎮 **Status:** Lernprojekt - Nicht-kommerziell
+- 📚 **Zweck:** Technologie-Demonstration
+
+## 🤝 Mitwirken
+
+Dieses Projekt ist offen für Bildungsbeiträge:
+
+1. **Fork** das Repository für eigene Experimente
+2. **Lerne** aus dem Code und erweitere ihn
+3. **Teile** deine Verbesserungen als Lernbeitrag
+4. **Respektiere** die nicht-kommerzielle Natur
+
+### Contribution Guidelines
+- ✅ Bildungsorientierte Verbesserungen
+- ✅ Code-Qualität und Dokumentation
+- ✅ Neue Lernfeatures
+- ❌ Kommerzielle Funktionen
+- ❌ Markenrechtsverletzungen
 
 ## 📝 Lizenz
 
-Dieses Projekt steht unter der MIT Lizenz - siehe [LICENSE](LICENSE) Datei für Details.
+```
+Bildungslizenz (Educational License)
 
-## 🐛 Bug Reports & Feature Requests
+Diese Software wird zu Bildungszwecken bereitgestellt.
 
-Bitte verwende die [GitHub Issues](https://github.com/yourusername/wer-ist-es-multiplayer/issues) für Bug Reports und Feature Requests.
+ERLAUBT:
+- Persönliche Nutzung zu Lernzwecken
+- Studium und Analyse des Codes
+- Nicht-kommerzielle Weiterentwicklung
+- Bildungsveranstaltungen und Workshops
+
+NICHT ERLAUBT:
+- Kommerzielle Nutzung oder Verkauf
+- Markenrechtsverletzungen
+- Redistribution ohne Quellenangabe
+- Entfernung dieser Lizenzhinweise
+
+Das ursprüngliche "Wer ist es?" Spiel ist Eigentum der 
+jeweiligen Markenrechtsinhaber und wird respektiert.
+```
+
+## 📞 Kontakt
+
+Für **Bildungsfragen** und **Lernzwecke**:
+- 🐙 GitHub: dkd-dobberkau
+- 💬 Zweck: Nur Bildung und Lerndiskussionen
+
+## 🙏 Danksagungen
+
+- **Hasbro/MB Games** - Für das ursprüngliche "Wer ist es?" Spielkonzept
+- **Open Source Community** - Für die verwendeten Technologien
+- **Railway** - Für die kostenlose Hosting-Plattform
+- **Bildungsgemeinschaft** - Für Feedback und Verbesserungen
+
+---
+
+### 📚 Bildungsressourcen
+
+Weiterführende Lernmaterialien:
+- [Socket.io Documentation](https://socket.io/docs/)
+- [Express.js Guide](https://expressjs.com/de/guide/)
+- [Railway Documentation](https://railway.app/docs)
+- [Web Game Development](https://developer.mozilla.org/en-US/docs/Games)
+
+**Letzte Aktualisierung:** $(date +'%B %Y')
+**Status:** Aktives Lernprojekt 🎓

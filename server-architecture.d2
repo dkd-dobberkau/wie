@@ -1,0 +1,188 @@
+title: "Wer ist es? - Server Architecture" {
+  near: top-center
+  style.font-size: 20
+  style.bold: true
+}
+
+# Server Components
+server: "Express Server" {
+  shape: rectangle
+  style.fill: "#4CAF50"
+}
+
+socketio: "Socket.IO" {
+  shape: rectangle  
+  style.fill: "#FF9800"
+}
+
+static: "Static Files\n(/public)" {
+  shape: rectangle
+  style.fill: "#2196F3"
+}
+
+# Data Storage
+gameRooms: "gameRooms\nMap<string, GameState>" {
+  shape: cylinder
+  style.fill: "#9C27B0"
+}
+
+playerSessions: "playerSessions\nMap<string, Session>" {
+  shape: cylinder
+  style.fill: "#9C27B0"
+}
+
+characters: "Character Data\n(16 characters)" {
+  shape: cylinder
+  style.fill: "#607D8B"
+}
+
+# External
+client: "Web Client" {
+  shape: person
+  style.fill: "#FFC107"
+}
+
+railway: "Railway\n(Deployment)" {
+  shape: cloud
+  style.fill: "#E91E63"
+}
+
+# Connections
+client -> server: "HTTP Requests"
+client <-> socketio: "WebSocket Events"
+server -> static: "Serves files"
+server -> railway: "Deployed on"
+
+socketio -> gameRooms: "Read/Write"
+socketio -> playerSessions: "Read/Write"
+socketio -> characters: "Read"
+
+# Socket Events Flow
+events: "Socket Events" {
+  createRoom: "createRoom" {
+    style.fill: "#E3F2FD"
+  }
+  joinRoom: "joinRoom" {
+    style.fill: "#E3F2FD"
+  }
+  startGame: "startGame" {
+    style.fill: "#E8F5E8"
+  }
+  selectCharacter: "selectCharacter" {
+    style.fill: "#E8F5E8"
+  }
+  askQuestion: "askQuestion" {
+    style.fill: "#FFF3E0"
+  }
+  answerQuestion: "answerQuestion" {
+    style.fill: "#FFF3E0"
+  }
+  makeGuess: "makeGuess" {
+    style.fill: "#FCE4EC"
+  }
+  eliminateCharacter: "eliminateCharacter" {
+    style.fill: "#F3E5F5"
+  }
+  chatMessage: "chatMessage" {
+    style.fill: "#F1F8E9"
+  }
+  newGame: "newGame" {
+    style.fill: "#E0F2F1"
+  }
+  disconnect: "disconnect" {
+    style.fill: "#FFEBEE"
+  }
+}
+
+client -> events.createRoom
+client -> events.joinRoom
+client -> events.startGame
+client -> events.selectCharacter
+client -> events.askQuestion
+client -> events.answerQuestion
+client -> events.makeGuess
+client -> events.eliminateCharacter
+client -> events.chatMessage
+client -> events.newGame
+client -> events.disconnect
+
+# Game State Flow
+gameflow: "Game State Flow" {
+  waiting: "waiting\n(room created)" {
+    style.fill: "#E3F2FD"
+  }
+  ready: "ready\n(2 players joined)" {
+    style.fill: "#E8F5E8"
+  }
+  selecting: "selecting\n(choosing characters)" {
+    style.fill: "#FFF3E0"
+  }
+  playing: "playing\n(asking questions)" {
+    style.fill: "#FCE4EC"
+  }
+  finished: "finished\n(game won)" {
+    style.fill: "#E0F2F1"
+  }
+}
+
+gameflow.waiting -> gameflow.ready: "joinRoom"
+gameflow.ready -> gameflow.selecting: "startGame"
+gameflow.selecting -> gameflow.playing: "both selected"
+gameflow.playing -> gameflow.finished: "correct guess"
+gameflow.finished -> gameflow.ready: "newGame"
+
+# API Endpoints
+api: "API Endpoints" {
+  health: "GET /health\n(status, room count)" {
+    style.fill: "#E8F5E8"
+  }
+  stats: "GET /stats\n(detailed metrics)" {
+    style.fill: "#E8F5E8"
+  }
+  root: "GET /\n(serves index.html)" {
+    style.fill: "#E3F2FD"
+  }
+}
+
+client -> api.health
+client -> api.stats  
+client -> api.root
+
+# Helper Functions
+helpers: "Helper Functions" {
+  generateRoomId: "generateRoomId()\n6-char room codes" {
+    style.fill: "#F3E5F5"
+  }
+  createNewGame: "createNewGame()\ninitialize game state" {
+    style.fill: "#F3E5F5"
+  }
+  sanitizeGameState: "sanitizeGameState()\nfilter sensitive data" {
+    style.fill: "#F3E5F5"
+  }
+  handlePlayerDisconnect: "handlePlayerDisconnect()\ncleanup on disconnect" {
+    style.fill: "#F3E5F5"
+  }
+}
+
+# Cleanup Process
+cleanup: "Auto Cleanup" {
+  roomCleanup: "Room Cleanup\n(30min timeout)" {
+    style.fill: "#FFEBEE"
+  }
+  disconnectCleanup: "Disconnect Cleanup\n(5min timeout)" {
+    style.fill: "#FFEBEE"
+  }
+}
+
+cleanup.roomCleanup -> gameRooms: "removes old rooms"
+cleanup.disconnectCleanup -> gameRooms: "removes disconnected rooms"
+
+# Memory Management
+memory: "In-Memory Storage" {
+  shape: rectangle
+  style.fill: "#FFF9C4"
+}
+
+gameRooms -> memory
+playerSessions -> memory
+characters -> memory
